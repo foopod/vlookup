@@ -1,0 +1,188 @@
+<html>
+    <head><link rel="stylesheet" href="more.css"></head>
+<body>
+    <h1 class="header">Payment <strong>Analyzer</strong></h1>
+    <input style="margin:auto;display:block;padding-left:7em;" type="file" id="fileinput">
+    <a class="submit" style="text-align:center" onclick="loadFile()">Analyze</a>
+    
+    <div id="ccIVR" style="display:none;">
+        <h3>Only in CCIVR</h3>
+        <table id="CCIVRoutput" style="width:100%;">
+            <tr>
+                <th>Row</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Card Number</th>
+                <th>Account Number</th>
+            </tr>
+        </table>
+    </div>
+    
+    <div id="TPII" style="display:none;">
+        <h3>Only in TPII</h3>
+        <table id="TPIIoutput" style="width:100%;">
+            <tr>
+                <th>Row</th>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Card Number</th>
+                <th>Account Number</th>
+            </tr>
+        </table>
+    </div>
+    <script src="jquery.min.js"></script>
+    <script src="papaparse.min.js"></script>
+    <script>
+        var date1 = "DateTime";
+        var amount1 = "Amount";
+        var cNumber1 = "CCNumber";
+        var aNumber1 = "ReferenceNumber";
+        
+        var date2 = "WHEN";
+        var amount2 = "AMOUNT";
+        var cNumber2 = "COMENT";
+        var aNumber2 = "CUST_NUMBER";
+        
+        var matchedList;
+        
+//        var entry : {
+//            "date" : "";
+//            "amount" : "",
+//            "cardNumber" : "",
+//            "accountNumber" : ""
+//        };
+        
+        var entrySet1 = [];
+        var entrySet2 = [];
+        
+        var loadFile= function(){
+            Papa.parse($('#fileinput')[0].files[0], {
+                complete: function(results) {
+//                    console.log(results);
+                    buildHeaders(results.data);
+                    buildLists(results.data);
+                    checkForCCIVRInTPII();
+                    checkForTPIIInCCIVR();
+                }
+            });
+        };
+        
+        var buildHeaders = function(inputArray){
+            for(header in inputArray[0]){
+                switch(inputArray[0][header]){
+                    case date1:
+                        date1 = header;
+                        break;
+                    case amount1:
+                        amount1 = header;
+                        break;
+                    case cNumber1:
+                        cNumber1 = header;
+                        break;
+                    case aNumber1:
+                        aNumber1 = header;
+                        break;
+                    case date2:
+                        date2 = header;
+                        break;
+                    case amount2:
+                        amount2 = header;
+                        break;
+                    case cNumber2:
+                        cNumber2 = header;
+                        break;
+                    case aNumber2:
+                        aNumber2 = header;
+                        break;
+                }
+            }
+        };
+        
+        var findCard = function (comment) {
+            var start = comment.indexOf("**** ****")-5;
+            return comment.substr(start,  19);
+        }
+        
+        var buildLists = function (inputArray){
+            for(row in inputArray){
+                if(row != 0){
+                    if(inputArray[row][date1] != "" && inputArray[row][amount1] != "" && inputArray[row][cNumber1] != "" && inputArray[row][aNumber1] != "" && inputArray[row][date1] != undefined && inputArray[row][amount1] != undefined && inputArray[row][cNumber1] != undefined && inputArray[row][aNumber1] != undefined){
+                        var entry = {
+                            date : inputArray[row][date1], 
+                            amount : parseFloat(inputArray[row][amount1].substr(1).replace(",","")),
+                            cNumber : inputArray[row][cNumber1],
+                            aNumber : inputArray[row][aNumber1],
+                            row : parseInt(row) + 1,
+                        };
+                        entrySet1.push(entry);
+                        console.log(inputArray[row][amount1] + " - " +entry.amount )
+                    } else {
+//                        console.log("Couldn't Load Row " + row + ", EntrySet1");
+                    }
+                    
+                    if(inputArray[row][date2] != "" && inputArray[row][amount2] != "" && inputArray[row][cNumber2] != "" && inputArray[row][aNumber2] != "" && inputArray[row][date2] != undefined && inputArray[row][amount2] != undefined && inputArray[row][cNumber2] != undefined && inputArray[row][aNumber2] != undefined){
+                        var entry = {
+                            date : inputArray[row][date2],
+                            amount : parseFloat(inputArray[row][amount2].substr(1)),
+                            cNumber : findCard(inputArray[row][cNumber2]),
+                            aNumber : inputArray[row][aNumber2],
+                            row : parseInt(row) + 1,
+                        };
+                        entrySet2.push(entry);
+                    } else {
+//                        console.log("Couldn't Load Row " + row + ", EntrySet2");
+                    }
+                }
+            }
+//            console.log(entrySet1);
+        };
+        
+        var checkForCCIVRInTPII = function(){
+            matchedList = [];
+            for(entry1 in entrySet1){
+                var found = false;
+                for(entry2 in entrySet2){
+                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount){
+                            matchedList.push([entrySet1[entry1],entrySet2[entry2]]);
+                        found = true;
+                    }
+                }
+                if(!found){
+                    $("#ccIVR").show();
+                    $("#CCIVRoutput").append(
+                        '<tr><td>'+entrySet1[entry1].row+'</td><td>'+entrySet1[entry1].date+'</td><td>'+entrySet1[entry1].amount+'</td><td>'+entrySet1[entry1].cNumber+'</td><td>'+entrySet1[entry1].aNumber+'</td></tr>'
+                        );
+//                    console.log("Didn't Match");
+//                    console.log(entrySet1[entry1]);
+                }
+            }
+//            console.log(matchedList);
+        };
+        
+        var checkForTPIIInCCIVR = function(){
+            for(entry2 in entrySet2){
+                var found = false;
+                for(entry1 in entrySet1){
+                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount){
+                        
+                        if($.inArray([entrySet1[entry1],entrySet2[entry2]], matchedList) != -1){
+                            matchedList.push([entrySet2[entry2],entrySet1[entry1]]);
+                        }
+                        found = true;
+                    }
+                }
+                if(!found){
+                    $("#TPII").show();
+                    $("#TPIIoutput").append(
+                        '<tr><td>'+entrySet2[entry2].row+'</td><td>'+entrySet2[entry2].date+'</td><td>'+entrySet2[entry2].amount+'</td><td>'+entrySet2[entry2].cNumber+'</td><td>'+entrySet2[entry2].aNumber+'</td></tr>'
+                        );
+//                    console.log("Didn't Match");
+//                    console.log(entrySet1[entry1]);
+                }
+            }
+//            console.log(matchedList);
+        };
+        
+    </script>
+</body>
+</html>
