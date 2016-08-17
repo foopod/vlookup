@@ -6,6 +6,12 @@ body{
     font-weight: 300;
 }
 
+.price {
+    color: limegreen;
+    font-weight: 900;
+    float: right;
+}
+
 th {
     text-align: left;
 }
