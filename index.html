@@ -4,9 +4,11 @@
     <h1 class="header">Payment <strong>Analyzer</strong></h1>
     <input style="margin:auto;display:block;padding-left:7em;" type="file" id="fileinput">
     <a class="submit" style="text-align:center" onclick="loadFile()">Analyze</a>
-    
+    <br>
+    <div id="matched" style="display:none;">
+    </div>
     <div id="ccIVR" style="display:none;">
-        <h3>Only in CCIVR</h3>
+        <h3 id="CCIVRTitle">Only in CCIVR</h3>
         <table id="CCIVRoutput" style="width:100%;">
             <tr>
                 <th>Row</th>
@@ -19,7 +21,7 @@
     </div>
     
     <div id="TPII" style="display:none;">
-        <h3>Only in TPII</h3>
+        <h3 id="TPIITitle">Only in TPII</h3>
         <table id="TPIIoutput" style="width:100%;">
             <tr>
                 <th>Row</th>
@@ -63,6 +65,7 @@
                     buildLists(results.data);
                     checkForCCIVRInTPII();
                     checkForTPIIInCCIVR();
+                    totalMatched();
                 }
             });
         };
@@ -139,6 +142,7 @@
         
         var checkForCCIVRInTPII = function(){
             matchedList = [];
+            var totalCCIVR = 0;
             for(entry1 in entrySet1){
                 var found = false;
                 for(entry2 in entrySet2){
@@ -152,14 +156,17 @@
                     $("#CCIVRoutput").append(
                         '<tr><td>'+entrySet1[entry1].row+'</td><td>'+entrySet1[entry1].date+'</td><td>'+entrySet1[entry1].amount+'</td><td>'+entrySet1[entry1].cNumber+'</td><td>'+entrySet1[entry1].aNumber+'</td></tr>'
                         );
+                    totalCCIVR+=entrySet1[entry1].amount;
 //                    console.log("Didn't Match");
 //                    console.log(entrySet1[entry1]);
                 }
             }
 //            console.log(matchedList);
+            $("#CCIVRTitle").append('<span class="price">$' + totalCCIVR.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</span>');
         };
         
         var checkForTPIIInCCIVR = function(){
+            var totalTPII = 0;
             for(entry2 in entrySet2){
                 var found = false;
                 for(entry1 in entrySet1){
@@ -176,12 +183,29 @@
                     $("#TPIIoutput").append(
                         '<tr><td>'+entrySet2[entry2].row+'</td><td>'+entrySet2[entry2].date+'</td><td>'+entrySet2[entry2].amount+'</td><td>'+entrySet2[entry2].cNumber+'</td><td>'+entrySet2[entry2].aNumber+'</td></tr>'
                         );
+                    totalTPII-=entrySet1[entry1].amount;
 //                    console.log("Didn't Match");
 //                    console.log(entrySet1[entry1]);
                 }
             }
 //            console.log(matchedList);
+            $("#TPIITitle").append('<span class="price">$' + totalTPII.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</span>');
         };
+        
+        var totalMatched = function(){
+            var numberOfResults = matchedList.length;
+            var total = 0;
+            for(entry in matchedList){
+                console.log(matchedList[entry][0].amount);
+                total += matchedList[entry][0].amount;
+            }
+            $("#matched").append(
+                '<h2>'+numberOfResults + ' matched. With a total value of '+ '<span class="price" style="float:none;">$' + total.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,')+'</span>.</h2>'
+            );
+            $("#matched").show();
+            
+            
+        }
         
     </script>
 </body>
