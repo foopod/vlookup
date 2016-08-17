@@ -3,7 +3,7 @@
 <body>
     <h1 class="header">Payment <strong>Analyzer</strong></h1>
     <input style="margin:auto;display:block;padding-left:7em;" type="file" id="fileinput">
-    <a class="submit" style="text-align:center" onclick="loadFile()">Analyze</a>
+    <a id="analyzeButton" class="submit" style="text-align:center" onclick="loadFile()">Analyze</a>
     <br>
     <div id="matched" style="display:none;">
     </div>
@@ -57,17 +57,24 @@
         var entrySet1 = [];
         var entrySet2 = [];
         
+        var runOnce = false;
+        
         var loadFile= function(){
-            Papa.parse($('#fileinput')[0].files[0], {
-                complete: function(results) {
-//                    console.log(results);
-                    buildHeaders(results.data);
-                    buildLists(results.data);
-                    checkForCCIVRInTPII();
-                    checkForTPIIInCCIVR();
-                    totalMatched();
-                }
-            });
+            if(!runOnce && $('#fileinput')[0].files[0] != undefined){
+                $("#analyzeButton").html("Start Again");
+                Papa.parse($('#fileinput')[0].files[0], {
+                    complete: function(results) {
+                        buildHeaders(results.data);
+                        buildLists(results.data);
+                        checkForCCIVRInTPII();
+                        checkForTPIIInCCIVR();
+                        totalMatched();
+                    }
+                });
+            } else {
+                location.reload();
+            }
+            runOnce = true;
         };
         
         var buildHeaders = function(inputArray){
