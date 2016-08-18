@@ -142,7 +142,7 @@
             for(entry1 in entrySet1){
                 var found = false;
                 for(entry2 in entrySet2){
-                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount){
+                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount  && !found){
                             matchedList.push([entrySet1[entry1],entrySet2[entry2]]);
                         found = true;
                     }
@@ -163,7 +163,7 @@
             for(entry2 in entrySet2){
                 var found = false;
                 for(entry1 in entrySet1){
-                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount){
+                    if(entrySet1[entry1].cNumber == entrySet2[entry2].cNumber && entrySet1[entry1].amount == entrySet2[entry2].amount  && !found){
                         
                         if($.inArray([entrySet1[entry1],entrySet2[entry2]], matchedList) != -1){
                             matchedList.push([entrySet2[entry2],entrySet1[entry1]]);
